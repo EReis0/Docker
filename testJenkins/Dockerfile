@@ -33,11 +33,15 @@ RUN powershell -Command \
     Copy-Item -Path C:/install/jenkins.war -Destination C:/jenkins/jenkins.war ; \
     Set-Item -Path Env:JENKINS_HOME -Value C:/jenkins_home
 
-# Copy script to perform initial setup
-COPY setup.groovy /usr/share/jenkins/ref/init.groovy.d/setup.groovy
+# Copy script to unlock Jenkins configuration
+COPY Unlock-Jenkins.ps1 C:/Unlock-Jenkins.ps1
+RUN powershell -ExecutionPolicy Bypass -File C:/Unlock-Jenkins.ps1
+
+# Copy script to create admin account
+COPY setup.groovy /usr/share/jenkins/ref/init.groovy.d/1-setup.groovy
 
 # Copy script to perform initial setup and install plugins
-COPY install-plugins.groovy /usr/share/jenkins/ref/init.groovy.d/install-plugins.groovy
+COPY install-plugins.groovy /usr/share/jenkins/ref/init.groovy.d/2-install-plugins.groovy
 ENV JENKINS_PLUGINS workflow-aggregator,git,credentials-binding
 
 # bootstrap jenkins at startup
@@ -62,3 +66,7 @@ LABEL description="Jenkins for Windows"
 # docker run -p 8080:8080 jenkins-windows2:latest
 
 # docker commit youthful_lamport my-jenkins-image:latest
+
+
+## run jenkins so it can pull the admin password and update the jenkins config. 
+# docker run -p 8080:8080 -v jenkins_home:C:/jenkins_home jenkins-windows2:latest powershell -Command "echo `$autoInstallConfig | Out-File -Encoding utf8 C:/jenkins/jenkins.install.InstallUtil.xml ; C:/openJDK/bin/java.exe -jar C:/jenkins/jenkins.war"
