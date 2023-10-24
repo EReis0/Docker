@@ -13,7 +13,6 @@ ADD http://mirrors.jenkins.io/war-stable/$VERSIONJENKINS/jenkins.war C:/install/
 # Download OpenJDK and install
 ADD https://aka.ms/download-jdk/microsoft-jdk-$OpenJDK-windows-x64.msi C:/install/openJDK.msi
 RUN powershell -Command Start-Process -Wait -FilePath msiexec -ArgumentList '/i', 'C:\install\openJDK.msi', 'ADDLOCAL="FeatureMain,FeatureEnvironment,FeatureJarFileRunWith,FeatureJavaHome"', 'INSTALLDIR="C:\openJDK"', '/quiet'
-#RUN msiexec /i C:/install/openJDK.msi /quiet /qn /norestart INSTALLDIR=c:/openJDK /L*V /L install64.log
 
 # Add LetsEncrypt root/inter certificates into openJDK cert trust so Jenkins can download extensions reliably
 ADD https://letsencrypt.org/certs/isrgrootx1.pem.txt C:/install/letsencryptroot.crt
@@ -49,7 +48,7 @@ EXPOSE 8080/tcp
 LABEL maintainer="eric@codeholics.com"
 LABEL description="Jenkins for Windows"
 
-# CD C:\
+# CD D:\
 # CD "D:\Code\Repos\Docker\Jenkins-Windows\"
 # docker build -t jenkins-windows:latest .
 # docker run -p 8080:8080 jenkins-windows:latest
