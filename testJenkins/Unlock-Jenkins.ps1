@@ -1,5 +1,5 @@
 # Retrieve the initial admin password from the console
-$adminPassword = docker logs jenkins-windows2 2>&1 | Select-String -Pattern 'Please use the following password to proceed to installation:' | ForEach-Object { $_.ToString().Split(':')[-1].Trim() }
+$adminPassword = Get-Content "C:\Users\ContainerAdministrator\.jenkins\secrets\initialAdminPassword" | Out-String
 
 # Generate the auto install configuration with the initial admin password
 $autoInstallConfig = @"
