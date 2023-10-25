@@ -60,10 +60,10 @@ EXPOSE 8080/tcp
 LABEL maintainer="eric@codeholics.com"
 LABEL description="Jenkins for Windows"
 
-# CD C:\
+# CD D:\
 # CD "D:\Code\Repos\Docker\testJenkins\"
 # docker build -t jenkins-windows2:latest .
-# docker run -p 8080:8080 jenkins-windows2:latest
+# docker run -p 8080:8080 jenkins-windows2:latest --name jenkins-windows2
 
 # docker commit youthful_lamport my-jenkins-image:latest
 

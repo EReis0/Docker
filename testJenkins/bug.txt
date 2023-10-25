@@ -1,0 +1,20 @@
+Step 19/33 : COPY Unlock-Jenkins.ps1 C:/Unlock-Jenkins.ps1
+ ---> 16a583298cee
+Step 20/33 : RUN powershell -ExecutionPolicy Bypass -File C:/Unlock-Jenkins.ps1
+ ---> Running in 41990cf2db9f
+
+Get-Content : Cannot find path 
+'C:\Users\ContainerAdministrator\.jenkins\secrets\initialAdminPassword'
+because it does not exist.
+At C:\Unlock-Jenkins.ps1:2 char:18
++ ... nPassword = Get-Content "C:\Users\ContainerAdministrator\.jenkins\sec ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\Contai...alAdminPasswo
+   rd:String) [Get-Content], ItemNotFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetCo
+   ntentCommand
+
+Removing intermediate container 41990cf2db9f
+ ---> e4e44fe765a5
+ 
+Step 21/33 : COPY setup.groovy /usr/share/jenkins/ref/init.groovy.d/1-setup.groovy
