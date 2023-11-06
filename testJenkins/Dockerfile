@@ -7,6 +7,8 @@ ARG VERSIONNANO=1809
 ARG VERSIONJENKINS=latest
 ARG OpenJDK=17.0.8.1
 
+ENV JENKINS_OPTS="--httpsPort=8443 --httpsCertificate=C:/jenkins_home/cert.pem --httpsPrivateKey=C:/jenkins_home/key.pem"
+
 # Download jenkins.war
 ADD http://mirrors.jenkins.io/war-stable/$VERSIONJENKINS/jenkins.war C:/install/jenkins.war
 
@@ -29,8 +31,8 @@ RUN C:/openJDK/bin/keytool -import -alias letsencryptauthorityx4b -keystore C:/o
 
 # Copy and configure Jenkins
 RUN powershell -Command \
-    New-Item -ItemType Directory -Path C:/jenkins ; \
-    Copy-Item -Path C:/install/jenkins.war -Destination C:/jenkins/jenkins.war ; \
+    New-Item -ItemType Directory -Path C:/jenkins_home ; \
+    Copy-Item -Path C:/install/jenkins.war -Destination C:/jenkins_home/jenkins.war ; \
     Set-Item -Path Env:JENKINS_HOME -Value C:/jenkins_home
 
 # Copy script to unlock Jenkins configuration
@@ -38,14 +40,15 @@ COPY Unlock-Jenkins.ps1 C:/Unlock-Jenkins.ps1
 RUN powershell -ExecutionPolicy Bypass -File C:/Unlock-Jenkins.ps1
 
 # Copy script to create admin account
-COPY setup.groovy /usr/share/jenkins/ref/init.groovy.d/1-setup.groovy
+COPY 1-setup.groovy C:/jenkins_home/init.groovy.d/1-setup.groovy
 
 # Copy script to perform initial setup and install plugins
-COPY install-plugins.groovy /usr/share/jenkins/ref/init.groovy.d/2-install-plugins.groovy
+COPY 2-install-plugins.groovy C:/jenkins_home/init.groovy.d/2-install-plugins.groovy
 ENV JENKINS_PLUGINS workflow-aggregator,git,credentials-binding
 
 # bootstrap jenkins at startup
-CMD C:/openJDK/bin/java.exe -jar C:/jenkins/jenkins.war
+# CMD C:/openJDK/bin/java.exe -jar C:/jenkins/jenkins.war
+CMD C:/openJDK/bin/java.exe -jar C:/jenkins_home/jenkins.war --httpsPort=8443 --httpsCertificate=C:/jenkins_home/cert.pem --httpsPrivateKey=C:/jenkins_home/key.pem
 
 # Copy Java and configure environment variables
 ENV JAVA_HOME C:/openJDK
@@ -55,18 +58,24 @@ ENV JAVA_TOOL_OPTIONS -Djava.awt.headless=true
 ENV PATH C:/openJDK/bin;C:/Windows/system32;C:/Windows;
 
 # LABEL and EXPOSE to document runtime settings
+ENV JENKINS_HOME C:/jenkins_home
 VOLUME C:/jenkins_home
-EXPOSE 8080/tcp
+EXPOSE 8443/tcp
 LABEL maintainer="eric@codeholics.com"
 LABEL description="Jenkins for Windows"
+
+# Enable SSL Jenkins (linux)
+# COPY https.pem /var/lib/jenkins/cert
+# COPY https.key /var/lib/jenkins/pk
+# ENV JENKINS_OPTS --httpPort=-1 --httpsPort=8083 --httpsCertificate=/var/lib/jenkins/cert --httpsPrivateKey=/var/lib/jenkins/pk --httpsCertificate --httpsPrivateKey
+# EXPOSE 8083
 
 # CD D:\
 # CD "D:\Code\Repos\Docker\testJenkins\"
 # docker build -t jenkins-windows2:latest .
-# docker run -p 8080:8080 jenkins-windows2:latest --name jenkins-windows2
+# docker run -p 8443:8443 --name jenkins-windows2 jenkins-windows2:latest
 
 # docker commit youthful_lamport my-jenkins-image:latest
-
 
 ## run jenkins so it can pull the admin password and update the jenkins config. 
 # docker run -p 8080:8080 -v jenkins_home:C:/jenkins_home jenkins-windows2:latest powershell -Command "echo `$autoInstallConfig | Out-File -Encoding utf8 C:/jenkins/jenkins.install.InstallUtil.xml ; C:/openJDK/bin/java.exe -jar C:/jenkins/jenkins.war"
