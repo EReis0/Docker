@@ -15,25 +15,22 @@ ADD http://mirrors.jenkins.io/war-stable/$VERSIONJENKINS/jenkins.war C:/install/
 # Download OpenJDK and install
 ADD https://aka.ms/download-jdk/microsoft-jdk-$OpenJDK-windows-x64.msi C:/install/openJDK.msi
 RUN powershell -Command Start-Process -Wait -FilePath msiexec -ArgumentList '/i', 'C:\install\openJDK.msi', 'ADDLOCAL="FeatureMain,FeatureEnvironment,FeatureJarFileRunWith,FeatureJavaHome"', 'INSTALLDIR="C:\openJDK"', '/quiet'
-#RUN msiexec /i C:/install/openJDK.msi /quiet /qn /norestart INSTALLDIR=c:/openJDK /L*V /L install64.log
-
-# Add LetsEncrypt root/inter certificates into openJDK cert trust so Jenkins can download extensions reliably
-ADD https://letsencrypt.org/certs/isrgrootx1.pem.txt C:/install/letsencryptroot.crt
-ADD https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem.txt C:/install/letsencryptauthorityx3a.crt
-ADD https://letsencrypt.org/certs/letsencryptauthorityx3.pem.txt C:/install/letsencryptauthorityx3b.crt
-ADD https://letsencrypt.org/certs/lets-encrypt-x4-cross-signed.pem.txt C:/install/letsencryptauthorityx4a.crt
-ADD https://letsencrypt.org/certs/letsencryptauthorityx4.pem.txt C:/install/letsencryptauthorityx4b.crt
-RUN C:/openJDK/bin/keytool -import -alias letsencryptroot -keystore C:/openJDK/lib/security/cacerts -storepass changeit -file C:/install/letsencryptroot.crt -noprompt
-RUN C:/openJDK/bin/keytool -import -alias letsencryptauthorityx3a -keystore C:/openJDK/lib/security/cacerts -storepass changeit -file C:/install/letsencryptauthorityx3a.crt -noprompt
-RUN C:/openJDK/bin/keytool -import -alias letsencryptauthorityx3b -keystore C:/openJDK/lib/security/cacerts -storepass changeit -file C:/install/letsencryptauthorityx3b.crt -noprompt
-RUN C:/openJDK/bin/keytool -import -alias letsencryptauthorityx4a -keystore C:/openJDK/lib/security/cacerts -storepass changeit -file C:/install/letsencryptauthorityx4a.crt -noprompt
-RUN C:/openJDK/bin/keytool -import -alias letsencryptauthorityx4b -keystore C:/openJDK/lib/security/cacerts -storepass changeit -file C:/install/letsencryptauthorityx4b.crt -noprompt
 
 # Copy and configure Jenkins
 RUN powershell -Command \
     New-Item -ItemType Directory -Path C:/jenkins_home ; \
-    Copy-Item -Path C:/install/jenkins.war -Destination C:/jenkins_home/jenkins.war ; \
+    # Copy-Item -Path C:/install/jenkins.war -Destination C:/jenkins_home/jenkins.war ; \
     Set-Item -Path Env:JENKINS_HOME -Value C:/jenkins_home
+
+COPY C:/install/jenkins.war C:/jenkins_home/jenkins.war
+
+# Generate a self-signed certificate and add it to the Java keystore
+RUN powershell -Command " \
+    $cert = New-SelfSignedCertificate -DnsName 'localhost' -CertStoreLocation Cert:\LocalMachine\My ; \
+    Export-Certificate -Cert $cert -FilePath C:/jenkins_home/cert.pem ; \
+    Export-PfxCertificate -Cert $cert -FilePath C:/jenkins_home/key.pem -Password (ConvertTo-SecureString -String 'your-password' -Force -AsPlainText) ; \
+    & 'C:/openJDK/bin/keytool.exe' -import -alias localhost -keystore 'C:/openJDK/lib/security/cacerts' -file 'C:/jenkins_home/cert.pem' -storepass 'changeit' -noprompt \
+"
 
 # Copy script to unlock Jenkins configuration
 COPY Unlock-Jenkins.ps1 C:/Unlock-Jenkins.ps1
@@ -47,7 +44,6 @@ COPY 2-install-plugins.groovy C:/jenkins_home/init.groovy.d/2-install-plugins.gr
 ENV JENKINS_PLUGINS workflow-aggregator,git,credentials-binding
 
 # bootstrap jenkins at startup
-# CMD C:/openJDK/bin/java.exe -jar C:/jenkins/jenkins.war
 CMD C:/openJDK/bin/java.exe -jar C:/jenkins_home/jenkins.war --httpsPort=8443 --httpsCertificate=C:/jenkins_home/cert.pem --httpsPrivateKey=C:/jenkins_home/key.pem
 
 # Copy Java and configure environment variables
@@ -71,7 +67,7 @@ LABEL description="Jenkins for Windows"
 # EXPOSE 8083
 
 # CD D:\
-# CD "D:\Code\Repos\Docker\testJenkins\"
+# CD "D:\Code\Repos\Docker\jenkins-windowsselfsigned"
 # docker build -t jenkins-windows2:latest .
 # docker run -p 8443:8443 --name jenkins-windows2 jenkins-windows2:latest
 
