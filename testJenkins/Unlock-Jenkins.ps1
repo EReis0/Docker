@@ -1,5 +1,6 @@
 # Retrieve the initial admin password from the console
-$adminPassword = Get-Content "C:\Users\ContainerAdministrator\.jenkins\secrets\initialAdminPassword" | Out-String
+$adminPassword = Get-Content -Path "C:/jenkins_home/secrets/initialAdminPassword" | Out-String
+#Get-Content "C:\Users\ContainerAdministrator\.jenkins\secrets\initialAdminPassword" | Out-String
 
 # Generate the auto install configuration with the initial admin password
 $autoInstallConfig = @"
