@@ -19,10 +19,11 @@ RUN powershell -Command Start-Process -Wait -FilePath msiexec -ArgumentList '/i'
 # Copy and configure Jenkins
 RUN powershell -Command \
     New-Item -ItemType Directory -Path C:/jenkins_home ; \
-    # Copy-Item -Path C:/install/jenkins.war -Destination C:/jenkins_home/jenkins.war ; \
-    Set-Item -Path Env:JENKINS_HOME -Value C:/jenkins_home
+    Copy-Item -Path C:/install/jenkins.war -Destination C:/jenkins_home/jenkins.war ; \
+    Set-Item -Path Env:JENKINS_HOME -Value C:/jenkins_home ; \
+    Get-ChildItem -Path C:/jenkins_home
 
-COPY C:/install/jenkins.war C:/jenkins_home/jenkins.war
+# COPY C:/install/jenkins.war C:/jenkins_home/jenkins.war
 
 # Generate a self-signed certificate and add it to the Java keystore
 RUN powershell -Command " \
