@@ -7,7 +7,7 @@ ARG VERSIONNANO=1809
 ARG VERSIONJENKINS=latest
 ARG OpenJDK=17.0.8.1
 
-ENV JENKINS_OPTS="--httpsPort=8443 --httpsCertificate=C:/jenkins_home/cert.pem --httpsPrivateKey=C:/jenkins_home/key.pem"
+ENV JENKINS_OPTS="--httpPort=-1 --httpsPort=8443 --httpsCertificate=C:/jenkins_home/cert.pem --httpsPrivateKey=C:/jenkins_home/key.pem"
 
 # Download jenkins.war
 ADD http://mirrors.jenkins.io/war-stable/$VERSIONJENKINS/jenkins.war C:/install/jenkins.war
@@ -33,6 +33,9 @@ RUN powershell -Command " \
     & 'C:/openJDK/bin/keytool.exe' -import -alias localhost -keystore 'C:/openJDK/lib/security/cacerts' -file 'C:/jenkins_home/cert.pem' -storepass 'changeit' -noprompt \
 "
 
+# bootstrap jenkins at startup
+CMD C:/openJDK/bin/java.exe -jar C:/jenkins_home/jenkins.war --httpsPort=8443 --httpsCertificate=C:/jenkins_home/cert.pem --httpsPrivateKey=C:/jenkins_home/key.pem
+
 # Copy script to unlock Jenkins configuration
 COPY Unlock-Jenkins.ps1 C:/Unlock-Jenkins.ps1
 RUN powershell -ExecutionPolicy Bypass -File C:/Unlock-Jenkins.ps1
@@ -43,9 +46,6 @@ COPY 1-setup.groovy C:/jenkins_home/init.groovy.d/1-setup.groovy
 # Copy script to perform initial setup and install plugins
 COPY 2-install-plugins.groovy C:/jenkins_home/init.groovy.d/2-install-plugins.groovy
 ENV JENKINS_PLUGINS workflow-aggregator,git,credentials-binding
-
-# bootstrap jenkins at startup
-CMD C:/openJDK/bin/java.exe -jar C:/jenkins_home/jenkins.war --httpsPort=8443 --httpsCertificate=C:/jenkins_home/cert.pem --httpsPrivateKey=C:/jenkins_home/key.pem
 
 # Copy Java and configure environment variables
 ENV JAVA_HOME C:/openJDK
