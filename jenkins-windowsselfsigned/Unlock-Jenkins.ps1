@@ -1,3 +1,9 @@
+# Check if the initialAdminPassword file exists
+if (-not (Test-Path -Path "C:/jenkins_home/secrets/initialAdminPassword")) {
+  Write-Warning "The initialAdminPassword file does not exist. Jenkins may not have finished the initial setup."
+  exit 1
+}
+
 # Retrieve the initial admin password from the console
 $adminPassword = Get-Content -Path "C:/jenkins_home/secrets/initialAdminPassword" | Out-String
 #Get-Content "C:\Users\ContainerAdministrator\.jenkins\secrets\initialAdminPassword" | Out-String
