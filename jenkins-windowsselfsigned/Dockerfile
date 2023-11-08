@@ -33,12 +33,20 @@ RUN powershell -Command " \
     & 'C:/openJDK/bin/keytool.exe' -import -alias localhost -keystore 'C:/openJDK/lib/security/cacerts' -file 'C:/jenkins_home/cert.pem' -storepass 'changeit' -noprompt \
 "
 
+# Copy script to unlock Jenkins configuration
+# COPY Unlock-Jenkins.ps1 C:/Scripts/Unlock-Jenkins.ps1
+# RUN powershell -ExecutionPolicy Bypass -File C:/Unlock-Jenkins.ps1
+RUN powershell -Command New-Item -ItemType Directory -Path C:/Scripts ; \ 
+    Get-ChildItem -Path C:/Scripts ; \
+    Get-ChildItem -Path C:/jenkins_home
+
 # bootstrap jenkins at startup
 CMD C:/openJDK/bin/java.exe -jar C:/jenkins_home/jenkins.war --httpsPort=8443 --httpsCertificate=C:/jenkins_home/cert.pem --httpsPrivateKey=C:/jenkins_home/key.pem
 
 # Copy script to unlock Jenkins configuration
-COPY Unlock-Jenkins.ps1 C:/Unlock-Jenkins.ps1
-RUN powershell -ExecutionPolicy Bypass -File C:/Unlock-Jenkins.ps1
+COPY Unlock-Jenkins.ps1 C:/Scripts/Unlock-Jenkins.ps1
+RUN powershell -Command Get-ChildItem -Path C:/Scripts
+# RUN powershell -ExecutionPolicy Bypass -File C:/Scripts/Unlock-Jenkins.ps1
 
 # Copy script to create admin account
 COPY 1-setup.groovy C:/jenkins_home/init.groovy.d/1-setup.groovy
