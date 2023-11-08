@@ -1,0 +1,15 @@
+Step 15/28 : RUN powershell -ExecutionPolicy Bypass -File C:/Scripts/Unlock-Jenkins.ps1
+ ---> Running in 58dfa9cf0630
+WARNING: The initialAdminPassword file does not exist. Jenkins may not have 
+finished the initial setup.
+The command 'cmd /S /C powershell -ExecutionPolicy Bypass -File C:/Scripts/Unlock-Jenkins.ps1' returned a non-zero code: 1
+
+
+
+
+
+What's Next?
+  View a summary of image vulnerabilities and recommendations → docker scout quickview
+PS D:\Code\Repos\Docker\jenkins-windowsselfsigned> docker run -p 8443:8443 --name jenkins-windows2 jenkins-windows2:latest
+Error: Unable to access jarfile C:/jenkins_home/jenkins.war
+PS D:\Code\Repos\Docker\jenkins-windowsselfsigned> 
