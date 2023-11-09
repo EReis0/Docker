@@ -11,6 +11,7 @@ ENV JENKINS_OPTS="--httpPort=-1 --httpsPort=8443 --httpsCertificate=C:/jenkins_h
 
 # Download jenkins.war
 ADD http://mirrors.jenkins.io/war-stable/$VERSIONJENKINS/jenkins.war C:/install/jenkins.war
+RUN powershell -Command Get-ChildItem -Path C:/install
 
 # Download OpenJDK and install
 ADD https://aka.ms/download-jdk/microsoft-jdk-$OpenJDK-windows-x64.msi C:/install/openJDK.msi
@@ -24,6 +25,7 @@ RUN powershell -Command \
     Get-ChildItem -Path C:/jenkins_home
 
 # COPY C:/install/jenkins.war C:/jenkins_home/jenkins.war
+RUN powershell -Command Get-ChildItem -Path C:/jenkins_home
 
 # Generate a self-signed certificate and add it to the Java keystore
 RUN powershell -Command " \
@@ -41,7 +43,8 @@ RUN powershell -Command New-Item -ItemType Directory -Path C:/Scripts ; \
     Get-ChildItem -Path C:/jenkins_home
 
 # bootstrap jenkins at startup
-CMD C:/openJDK/bin/java.exe -jar C:/jenkins_home/jenkins.war --httpsPort=8443 --httpsCertificate=C:/jenkins_home/cert.pem --httpsPrivateKey=C:/jenkins_home/key.pem
+# CMD C:/openJDK/bin/java.exe -jar C:/jenkins_home/jenkins.war %JENKINS_OPTS%
+CMD powershell -ExecutionPolicy Bypass -File C:/Scripts/Unlock-Jenkins.ps1
 
 # Copy script to unlock Jenkins configuration
 COPY Unlock-Jenkins.ps1 C:/Scripts/Unlock-Jenkins.ps1
@@ -81,6 +84,3 @@ LABEL description="Jenkins for Windows"
 # docker run -p 8443:8443 --name jenkins-windows2 jenkins-windows2:latest
 
 # docker commit youthful_lamport my-jenkins-image:latest
-
-## run jenkins so it can pull the admin password and update the jenkins config. 
-# docker run -p 8080:8080 -v jenkins_home:C:/jenkins_home jenkins-windows2:latest powershell -Command "echo `$autoInstallConfig | Out-File -Encoding utf8 C:/jenkins/jenkins.install.InstallUtil.xml ; C:/openJDK/bin/java.exe -jar C:/jenkins/jenkins.war"
